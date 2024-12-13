@@ -8,12 +8,7 @@ import {
   MessageCircle,
   Trash2,
   Plus,
-  Shield,
-  Clock,
-  Bell,
-  Wifi,
-  Battery,
-  Volume2,
+  Store,
 } from "lucide-react";
 import { DraggableIcon } from "./components/DraggableIcon";
 import { MarketplaceModal } from "./components/MarketplaceModal";
@@ -74,8 +69,20 @@ function App() {
 
       const rect = workspaceRef.current?.getBoundingClientRect();
       if (rect) {
-        const newX = Math.max(0, Math.min(rect.width - 80, x - rect.left));
-        const newY = Math.max(0, Math.min(rect.height - 120, y - rect.top));
+        let newX = Math.max(0, Math.min(rect.width - 80, x - rect.left));
+        let newY = Math.max(0, Math.min(rect.height - 120, y - rect.top));
+
+        // Evita sovrapposizioni
+        const isOverlapping = Object.entries(iconPositions).some(([key, pos]) => {
+          if (key === id) return false;
+          const distance = Math.sqrt((pos.x - newX) ** 2 + (pos.y - newY) ** 2);
+          return distance < 100; // Limite minimo di distanza tra le icone
+        });
+
+        if (isOverlapping) {
+          newX += 100;
+          newY += 100;
+        }
 
         setIconPositions((prev) => ({
           ...prev,
@@ -83,26 +90,23 @@ function App() {
         }));
       }
     },
-    [icons]
+    [icons, iconPositions]
   );
 
   const handleConfirmUninstall = () => {
     if (uninstallApp) {
       const baseId = uninstallApp.id.split("-")[0];
-
       setIcons((prev) => prev.filter((icon) => icon.id !== uninstallApp.id));
       setIconPositions((prev) => {
         const newPositions = { ...prev };
         delete newPositions[uninstallApp.id];
         return newPositions;
       });
-
       setUsedApps((prev) => {
         const next = new Set(prev);
         next.delete(baseId);
         return next;
       });
-
       setUninstallApp(null);
     }
   };
@@ -113,10 +117,8 @@ function App() {
       if (!usedApps.has(baseId)) {
         const newId = `${app.id}-${Date.now()}`;
         const newApp = { ...app, id: newId };
-
         setIcons((prev) => [...prev, newApp]);
         setUsedApps((prev) => new Set(prev).add(baseId));
-
         const rect = workspaceRef.current?.getBoundingClientRect();
         if (rect) {
           const centerX = (rect.width - 80) / 2;
@@ -172,10 +174,13 @@ function App() {
               <Plus className="w-4 h-4 text-white/80" />
               <span className="text-white/80 text-xs">App</span>
             </button>
-          </div>
-          <div className="flex items-center space-x-3">
-            <Wifi className="w-4 h-4 text-white/60" />
-            <Battery className="w-4 h-4 text-white/60" />
+            <button
+              onClick={() => setIsMarketplaceOpen(true)}
+              className="flex items-center space-x-1 px-2 py-1 hover:bg-[#132927] transition-colors rounded"
+            >
+              <Store className="w-4 h-4 text-white/80" />
+              <span className="text-white/80 text-xs">Marketplace</span>
+            </button>
           </div>
         </div>
 
@@ -205,3 +210,5 @@ function App() {
 }
 
 export default App;
+
+
