@@ -52,7 +52,11 @@ function App() {
   const [icons, setIcons] = useState<AppIcon[]>(initialIcons);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>({
+    sitebuilder: { x: 50, y: 100 },
+    appbuilder: { x: 150, y: 200 },
+    chatbuilder: { x: 250, y: 300 },
+  });
   const [uninstallApp, setUninstallApp] = useState<AppIcon | null>(null);
   const [usedApps, setUsedApps] = useState<Set<string>>(new Set());
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -67,22 +71,11 @@ function App() {
         return;
       }
 
+      // Calcolo delle nuove posizioni relative al contenitore
       const rect = workspaceRef.current?.getBoundingClientRect();
       if (rect) {
-        let newX = Math.max(0, Math.min(rect.width - 80, x - rect.left));
-        let newY = Math.max(0, Math.min(rect.height - 120, y - rect.top));
-
-        // Evita sovrapposizioni
-        const isOverlapping = Object.entries(iconPositions).some(([key, pos]) => {
-          if (key === id) return false;
-          const distance = Math.sqrt((pos.x - newX) ** 2 + (pos.y - newY) ** 2);
-          return distance < 100; // Limite minimo di distanza tra le icone
-        });
-
-        if (isOverlapping) {
-          newX += 100;
-          newY += 100;
-        }
+        const newX = Math.max(0, Math.min(rect.width - 80, x - rect.left));
+        const newY = Math.max(0, Math.min(rect.height - 120, y - rect.top));
 
         setIconPositions((prev) => ({
           ...prev,
@@ -90,7 +83,7 @@ function App() {
         }));
       }
     },
-    [icons, iconPositions]
+    [icons]
   );
 
   const handleConfirmUninstall = () => {
@@ -210,5 +203,3 @@ function App() {
 }
 
 export default App;
-
-
